@@ -58,22 +58,38 @@ public class Banco1000 {
         System.out.print("Digite o nome do usuário: ");
         String nome = scanner.nextLine();
         System.out.print("Digite o CPF do usuário: ");
-        String cpf = scanner.nextLine();
 
-        for (Cliente cliente : clientes) {
-            if (cliente.getCpf().equals(cpf)) {
-                System.out.println("Erro: Já existe um usuário cadastrado com este CPF!");
-                return;
+        String cpf;
+        while (true) {
+            System.out.print("Digite o CPF do usuário (11 caracteres): ");
+            cpf = scanner.nextLine();
+
+            if (cpf.length() != 11) {
+                System.out.println("Erro: O CPF deve conter exatamente 11 caracteres. Tente novamente.");
+                continue;
             }
+
+            boolean cpfJaCadastrado = false;
+            for (Cliente cliente : clientes) {
+                if (cliente.getCpf().equals(cpf)) {
+                    System.out.println("Erro: Já existe um usuário cadastrado com este CPF!");
+                    cpfJaCadastrado = true;
+                    break;
+                }
+            }
+
+            if (cpfJaCadastrado) {
+                continue;
+            }
+
+            break;
         }
 
         System.out.print("Digite a senha do usuário: ");
         String senha = scanner.nextLine();
 
-
         Cliente cliente = new Cliente(nome, cpf, senha);
         clientes.add(cliente);
-        System.out.println("Usuário cadastrado com sucesso!");
     }
 
     private static void criarConta(Scanner scanner) {
