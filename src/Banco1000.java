@@ -1,9 +1,6 @@
 package src;
 
-import src.model.Cliente;
-import src.model.Conta;
-import src.model.Movimentacao;
-import src.model.Transferencia;
+import src.model.*;
 
 import java.util.ArrayList;
 import java.util.Scanner;
@@ -12,6 +9,7 @@ public class Banco1000 {
 
     private static ArrayList<Cliente> clientes = new ArrayList<>();
     private static Cliente usuarioLogado = null;
+    private static ArrayList<Agencia> agencias = new ArrayList<>();
 
     public static void main(String[] args) {
         Scanner scanner = new Scanner(System.in);
@@ -99,17 +97,65 @@ public class Banco1000 {
         }
 
         System.out.println("===== Criar Conta =====");
-        System.out.print("Digite o tipo de conta (corrente/poupanca): ");
-        String tipo = scanner.nextLine();
-        System.out.print("Digite o saldo inicial: ");
-        double saldo = scanner.nextDouble();
+        System.out.print("Digite o número da agência: ");
+        int numAgencia = scanner.nextInt();
+        scanner.nextLine();
+        System.out.print("Informe o número correspondente ao tipo da conta: (1 - corrente/ 2 -poupanca/ 3 - salário): ");
+        int escolha = scanner.nextInt();
+        scanner.nextLine();
 
+        Agencia agencia = Banco1000.buscarAgencia(numAgencia);
+        if (agencia == null) {
+            agencia = new Agencia(numAgencia);
+            Banco1000.adicionarAgencia(agencia);
+        }
 
-        Conta conta = new Conta(usuarioLogado, tipo, saldo);
-        usuarioLogado.adicionarConta(conta);
-        System.out.println("Conta criada com sucesso! Número da conta: " + conta.getNumConta());
+        Conta conta = null;
+        double saldo = 0.00;
+
+        switch (escolha) {
+            case 1 :
+                System.out.print("Digite o saldo inicial: ");
+                saldo = scanner.nextDouble();
+                conta = new ContaCorrente(usuarioLogado, agencia, saldo);
+                break;
+
+            case 2 :
+
+                System.out.print("Digite o saldo inicial: ");
+                saldo = scanner.nextDouble();
+                conta = new ContaPoupanca(usuarioLogado, agencia, saldo);
+                break;
+
+            case 3 :
+
+                System.out.print("Digite o saldo inicial: ");
+                saldo = scanner.nextDouble();
+                conta = new ContaSalario(usuarioLogado, agencia, saldo);
+                break;
+        }
+
+        if (conta != null) {
+            usuarioLogado.adicionarConta(conta);
+
+            agencia.adicionarConta(conta);
+            System.out.println("Conta criada com sucesso! Número da conta: " + conta.getNumConta());
+        }
+
     }
 
+    public static Agencia buscarAgencia(int numAgencia) {
+        for (Agencia agencia : agencias) {
+            if (agencia.getnumeroAgencia() == numAgencia) {
+                return agencia;
+            }
+        }
+        return null;
+    }
+
+    public static void adicionarAgencia(Agencia agencia) {
+        agencias.add(agencia);
+    }
 
     private static void login(Scanner scanner) {
         System.out.println("===== Login =====");
@@ -133,18 +179,19 @@ public class Banco1000 {
     private static void realizarOperacoes(Scanner scanner) {
         while (true) {
             System.out.println("===== Operações Bancárias =====");
-            System.out.println("1. Consultar Saldo");
+            System.out.println("1. Consultar Conta");
             System.out.println("2. Depositar");
             System.out.println("3. Sacar");
             System.out.println("4. Transferir");
             System.out.println("5. Ver Movimentações");
-            System.out.println("6. Voltar");
+            System.out.println("6. Listar Contas");
+            System.out.println("7. Voltar");
             System.out.print("Escolha uma opção: ");
             int opcao = scanner.nextInt();
 
             switch (opcao) {
                 case 1:
-                    consultarSaldo(scanner);
+                    consultarConta(scanner);
                     break;
                 case 2:
                     depositar(scanner);
@@ -159,6 +206,9 @@ public class Banco1000 {
                     verMovimentacoes(scanner);
                     break;
                 case 6:
+                    listarContas(scanner);
+                    break;
+                case 7:
                     return;
                 default:
                     System.out.println("Opção inválida! Tente novamente.");
@@ -166,10 +216,26 @@ public class Banco1000 {
         }
     }
 
-    private static void consultarSaldo(Scanner scanner) {
-        System.out.println("===== Consultar Saldo =====");
+    private static void consultarConta(Scanner scanner) {
+        System.out.println("===== Consultar Conta =====");
+        System.out.print("Digite o número da agência: ");
+        int numAgencia = scanner.nextInt();
+        System.out.print("Digite o número da conta: ");
+        int numConta = scanner.nextInt();
+
+        boolean contaEncontrada = false;
+
+
         for (Conta conta : usuarioLogado.getContas()) {
-            System.out.println(conta);
+            if (conta.getNumConta() == numConta && conta.getAgencia().getnumeroAgencia() == numAgencia) {
+                conta.exibirDetalhes();
+                contaEncontrada = true;
+                break;
+            }
+        }
+
+        if (!contaEncontrada) {
+            System.out.println("Conta não encontrada para o número da conta e agência informados.");
         }
     }
 
@@ -255,5 +321,23 @@ public class Banco1000 {
         }
 
         System.out.println("Conta não encontrada!");
+    }
+    private static void listarContas(Scanner scanner) {
+        System.out.println("===== Contas cadastradas: =====");
+
+        boolean encontrouConta = false;
+
+        for (Agencia agencia : agencias) {
+            for (Conta conta : agencia.getContas()) {
+                if (conta.getCliente().equals(usuarioLogado)) {
+                    System.out.println("Agência: " + agencia.getnumeroAgencia() + " - Número da conta: " + conta.getNumConta());
+                    encontrouConta = true;
+                }
+            }
+        }
+
+        if (!encontrouConta) {
+            System.out.println("Nenhuma conta encontrada para o usuário " + usuarioLogado.getNome() + ".");
+        }
     }
 }
